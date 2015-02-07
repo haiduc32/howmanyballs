@@ -46,6 +46,7 @@
             <option value="meter"> meter </option>
             <option value="cm"   > cm </option>
             <option value="yard" > yard </option>
+            <option value="foot" > foot </option>
             <option value="inch" > inch </option>
           </select>
         </div>
@@ -82,13 +83,47 @@
       <div class="col-md-12 text-center"> 
         <button id="calculateBtn" name="calculateBtn" class="btn btn-primary" type="submit">Calculate!</button> 
       </div>
-      
     </form>
     <div class="row" style="min-height:49px;">
       <div class="col-md-12"> 
         <p class="lead text-center" data-bind="text: calculatedOutput"></p>
       </div>
     </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <p class="text-center">If you have just the volume, that's fine, input it down here:</p>
+      </div>
+    </div>
+    <form id="volumeInputForm" class="form-horizontal" data-bind="submit: calculateByVolume">
+      <div class="form-group">
+        <label for="inputCubicUnit" class="col-sm-4 control-label">Cubic unit</label>
+        <div class="col-sm-4">
+          <select class="form-control" id="inputCubicUnit" data-bind="value: cubicUnit">
+            <option value="meter"> meter </option>
+            <option value="cm"   > cm </option>
+            <option value="yard" > yard </option>
+            <option value="foot" > foot </option>
+            <option value="inch" > inch </option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="inputVolume" class="col-sm-4 control-label">Volume</label>
+        <div class="col-sm-4">
+          <input name="inputVolume" type="width" class="form-control" id="inputVolume" placeholder="Volume" data-bind="value: volume">
+        </div>
+      </div>
+      <div class="col-md-12 text-center"> 
+        <button id="calculateBtn" name="calculateBtn" class="btn btn-primary" type="submit">Calculate!</button> 
+      </div>
+    </form>
+    <div class="row" style="min-height:49px;">
+      <div class="col-md-12"> 
+        <p class="lead text-center" data-bind="text: calculatedOutput2"></p>
+      </div>
+    </div>
+
     <div class="col-md-12 text-center">
       <!-- social noise starts here -->
       <iframe src="https://ghbtns.com/github-btn.html?user=haiduc32&repo=howmanyballs&type=star&count=true" frameborder="0" scrolling="0" width="90px" height="20px"></iframe>
@@ -151,14 +186,19 @@
         }
     });
 
-
     $("#inputForm").validate({
-        rules: {
-            inputWidth: {required: true, number: true, min: 0},
-            inputLength: {required: true, number: true, min: 0},
-            inputHeight: {required: true, number: true, min: 0}
-        }
+      rules: {
+        inputWidth: {required: true, number: true, min: 0},
+        inputLength: {required: true, number: true, min: 0},
+        inputHeight: {required: true, number: true, min: 0}
+      }
     });
+
+    $("#volumeInputForm").validate({
+      rules: {
+        inputVolume: { required: true, number: true, min: 0}
+      }
+    })
     
     var viewModel = {
       unit: ko.observable(),
@@ -166,7 +206,10 @@
       length: ko.observable(),
       height: ko.observable(),
       balls: ko.observable(),
+      volume: ko.observable(),
+      cubicUnit: ko.observable(),
       calculatedOutput: ko.observable(" "),
+      calculatedOutput2: ko.observable(" "),
       calculate: function(formElement) {
           //if form input is invalid then exit
           if (!$("#inputForm").valid()) return;
@@ -189,7 +232,29 @@
           var weightText = beautifyWeight(weight, viewModel.unit());
           var text = "You can fit " + ballCount + " balls into that space, with a total weight of " + weightText + ".";
           viewModel.calculatedOutput(text);
-        }
+        },
+      calculateByVolume: function(formElement) {
+        //if form input is invalid then exit
+          if (!$("#volumeInputForm").valid()) return;
+
+          var cmVolume = transformUnitToCubicCM(viewModel.volume(), viewModel.unit());
+
+          //asume the given volume represents a cube
+          //calculate the square root of 3
+          var eachSide = Math.pow(cmVolume, 1/3);
+
+          var ball = getBall(viewModel.balls());
+
+          var ballCount1 = calculateHexDistr(eachSide, eachSide, eachSide, ball);
+          var ballCount2 = calculateCubic(eachSide, eachSide, eachSide, ball);
+
+          var ballCount = Math.max(ballCount1, ballCount2);
+
+          var weight = ballCount * ball.weight;
+          var weightText = beautifyWeight(weight, viewModel.unit());
+          var text = "You can fit at most " + ballCount + " balls into that volume, with a total weight of " + weightText + ".";
+          viewModel.calculatedOutput2(text);
+      }
     }
 
     //activate knockout js
@@ -270,6 +335,10 @@
       }
       //default is cm
       return size;
+    }
+
+    function transformUnitToCubicCM(size, unit) {
+      return size * Math.pow(transformUnitToCM(1, unit), 3);
     }
 
     function getBall(type) {
