@@ -1,0 +1,230 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <title>How many ping pong balls in?..</title>
+  <!-- Bootstrap -->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <link href="css/jumbotron-narrow.css" rel="stylesheet">
+
+  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="container">
+
+    <div class="jumbotron">
+      <h3>How many ping pong balls can you fit in?..</h3>
+      <p class="lead">Have you lost sleepless nights wandering how many ping pong balls can fit in your room? 
+      Fear no more! This website will help you get the exact number!<p>
+    </div>
+
+    <form id="inputForm" class="form-horizontal" data-bind="submit: calculate">
+      <div class="form-group">
+        <label for="inputUnit" class="col-sm-4 control-label">Unit</label>
+        <div class="col-sm-4">
+          <select class="form-control" id="inputUnit" data-bind="value: unit">
+            <option value="meters"> meters </option>
+            <option value="cm"    > cm </option>
+            <option value="yards" > yards </option>
+            <option value="inch"  > inch </option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="inputWidth" class="col-sm-4 control-label">Width</label>
+        <div class="col-sm-4">
+          <input name="inputWidth" type="width" class="form-control" id="inputWidth" placeholder="Width" data-bind="value: width">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="inputLength" class="col-sm-4 control-label">Length</label>
+        <div class="col-sm-4">
+          <input name="inputLength" type="length" class="form-control" id="inputLength" placeholder="Length" data-bind="value: length">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="inputHeight" class="col-sm-4 control-label">Height</label>
+        <div class="col-sm-4">
+          <input name="inputHeight" type="height" class="form-control" id="inputHeight" placeholder="Height" data-bind="value: height">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="inputBalls" class="col-sm-4 control-label">Balls</label>
+        <div class="col-sm-4">
+          <select class="form-control" id="inputBalls" data-bind="value: balls">
+            <option value="pong"> Ping Pong (pre 2000)</option>
+            <option value="pong2000"> Ping Pong (post 2000)</option>
+            <option value="basketball"> Basketball</option>
+            <option value="baseball"> Baseball</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-md-12 text-center"> 
+        <button id="calculateBtn" name="calculateBtn" class="btn btn-primary" type="submit">Calculate!</button> 
+      </div>
+      <div class="col-md-12 text-center"> 
+        <p class="lead" data-bind="text: calculatedOutput"></p>
+      </div>
+    </form>
+
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'howmanyballs'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    
+
+  </div>
+
+
+
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+  <!-- Include all compiled plugins (below), or include individual files as needed -->
+  <script src="js/bootstrap.min.js"></script>
+  <script src="js/knockout-3.2.0.js"></script>
+  <script src="js/jquery.validate.min.js"></script>
+
+  <script>
+    $('form:first *:input[type!=hidden]:first').focus();
+
+    $("#inputForm").validate({
+        rules: {
+            inputWidth: {required: true, number: true, min: 0},
+            inputLength: {required: true, number: true, min: 0},
+            inputHeight: {required: true, number: true, min: 0}
+        }
+    });
+    
+    var viewModel = {
+      unit: ko.observable(),
+      width: ko.observable(),
+      length: ko.observable(),
+      height: ko.observable(),
+      balls: ko.observable(),
+      calculatedOutput: ko.observable(''),
+      calculate: function(formElement) {
+          //if form input is invalid then exit
+          if (!$("#inputForm").valid()) return;
+
+          var boxWidth = transformUnit(viewModel.width(), viewModel.unit());
+          var boxLength = transformUnit(viewModel.length(), viewModel.unit());
+          var boxHeight = transformUnit(viewModel.height(), viewModel.unit());
+
+          var ball = getBall(viewModel.balls());
+
+          var ballCount = calculateHexDistr(boxWidth, boxLength, boxHeight, ball);
+          var weight = ballCount * ball.weight / 1000;
+          var text = "You can fit " + ballCount + " balls into that space, with a total weight of " + weight + " kg.";
+          viewModel.calculatedOutput(text);
+        }
+    }
+
+    //activate knockout js
+    ko.applyBindings(viewModel);
+
+    //subscribe to observable changes
+    
+    /*viewModel.unit.subscribe(calculate);
+    viewModel.width.subscribe(calculate);
+    viewModel.length.subscribe(calculate);
+    viewModel.height.subscribe(calculate);
+    viewModel.balls.subscribe(calculate);
+    */
+
+    //TODO: implement multiple algorythms:
+    //cubic
+    //hexagonal distributed
+    //hexagonal tight
+
+    function calculateHexDistr(boxWidth, boxLength, boxHeight, ball) {
+      if (boxWidth < ball.diameter || boxLength < ball.diameter || boxHeight < ball.diameter) return 0;
+
+      //TODO: lots of validation!
+
+      //calculate the number of balls in the very first raw
+      var firstRowCount = parseInt(boxWidth / ball.diameter);
+      //calculate the remaining distributed space between balls in the row
+      var spaceBBallsR = (boxWidth - firstRowCount * ball.diameter) / (firstRowCount - 1);
+      //ignore too small values
+      if (spaceBBallsR < 0.0001) spaceBBallsR = 0;
+      
+      var standardRowDist = ball.diameter / 2 * Math.sqrt(3);
+      //calculate maximum number of rows
+      var rowsCount = parseInt((boxLength - ball.diameter) / standardRowDist + 1);
+      //calculate the remaining distributed space between rows
+      var spaceBBallsC = boxLength - ball.diameter - (rowsCount - 1) * standardRowDist;
+      //ignore too small values
+      if (spaceBBallsC < 0.0001) spaceBBallsC = 0;
+
+      //calculate the vertical distance between ball centers from 2 adiacent rows
+      var rowCenterDist = Math.sqrt(Math.pow(standardRowDist + spaceBBallsC, 2) + Math.pow((ball.diameter + spaceBBallsR) / 2, 2));
+      //calculate the distance from ball centers in layer one to layer two
+      //first calculate the circumcenter in the first layer
+      var circ = calculateCircumcenter(ball.diameter + spaceBBallsR, rowCenterDist, rowCenterDist);
+      //now calculate the distance from ball centers on the vertical axys
+      var vertDist = Math.sqrt(Math.pow(ball.diameter, 2) - Math.pow(circ/2, 2));
+      
+      //calculate the number of layers
+      var layerCount = parseInt((boxHeight - ball.diameter)/vertDist) + 1;
+
+      //now we just have to figure out the number of balls..
+      var ballsInFirstLayer = firstRowCount * rowsCount - (parseInt(rowsCount / 2));
+      var ballsInOddLayers = (firstRowCount - 1) * rowsCount + (parseInt((rowsCount - 1) / 2));
+      
+      var oddLayers =parseInt(layerCount / 2);
+      var fullLayers = layerCount - oddLayers;
+
+      var ballCount = fullLayers * ballsInFirstLayer + oddLayers * ballsInOddLayers;
+      return ballCount;
+
+      //if ()
+      //Math.sqrt(3);
+      //var dcircumcenter = (2 * a * b * c) / Math.sqrt((a + b + c) * (-a + b + c) * (a - b + c) * (a + b - c));
+    }
+
+    function calculateCircumcenter(a,b,c) {
+      var diam = 2 * a * b * c / Math.sqrt((a+b+c) * (-a+b+c) * (a-b+c) * (a+b-c));
+      return diam;
+    }
+
+    //transform into cm
+    function transformUnit(size, unit) {
+      switch (unit) {
+        case 'meters': return size * 100;
+        case 'yards': return size * 91.44;
+        case 'inch': return size * 2.54;
+      }
+      //default is cm
+      return size;
+    }
+
+    function getBall(type) {
+      switch (type) {
+        case 'pong': return { diameter: 3.8, weight: 2.7 };
+        case 'pong2000': return { diameter: 4, weight: 2.7 };
+        case 'basketball': return {diameter: 35.4, weight: 623.69 };
+        case 'baseball': return { diameter: 7.45, weight: 145.5};
+      }
+    }
+  </script>
+</body>
+</html>
