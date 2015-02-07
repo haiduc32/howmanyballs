@@ -35,7 +35,7 @@
     <div class="jumbotron">
       <h3>How many ping pong balls can fit in?..</h3>
       <p class="lead">Have you lost sleepless nights wondering how many ping pong balls can fit in your room? 
-      Fear no more! This website wills help you get the exact number!<p>
+      Fear no more! This website will help you get the exact number!<p>
     </div>
 
     <form id="inputForm" class="form-horizontal" data-bind="submit: calculate">
@@ -43,10 +43,10 @@
         <label for="inputUnit" class="col-sm-4 control-label">Unit</label>
         <div class="col-sm-4">
           <select class="form-control" id="inputUnit" data-bind="value: unit">
-            <option value="meters"> meters </option>
-            <option value="cm"    > cm </option>
-            <option value="yards" > yards </option>
-            <option value="inch"  > inch </option>
+            <option value="meter"> meter </option>
+            <option value="cm"   > cm </option>
+            <option value="yard" > yard </option>
+            <option value="inch" > inch </option>
           </select>
         </div>
       </div>
@@ -82,11 +82,15 @@
       <div class="col-md-12 text-center"> 
         <button id="calculateBtn" name="calculateBtn" class="btn btn-primary" type="submit">Calculate!</button> 
       </div>
-      <div class="col-md-12 text-center"> 
-        <p class="lead" data-bind="text: calculatedOutput"></p>
-      </div>
+      
     </form>
+    <div class="row" style="min-height:49px;">
+      <div class="col-md-12"> 
+        <p class="lead text-center" data-bind="text: calculatedOutput"></p>
+      </div>
+    </div>
     <div class="col-md-12 text-center">
+      <!-- social noise starts here -->
       <iframe src="https://ghbtns.com/github-btn.html?user=haiduc32&repo=howmanyballs&type=star&count=true" frameborder="0" scrolling="0" width="90px" height="20px"></iframe>
       
       <a href="https://twitter.com/share" class="twitter-share-button" data-via="haiduc32">Tweet</a>
@@ -112,7 +116,11 @@
 
   </div>
 
-
+  <footer class="footer">
+    <div class="container">
+        <p class="text-muted">© 2015 - pet project by <a href="http://www.radupascal.com">Radu Pascal</a></p>
+    </div>
+  </footer>
 
   <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
@@ -123,6 +131,26 @@
 
   <script>
     $('form:first *:input[type!=hidden]:first').focus();
+
+    // override jquery validate plugin defaults
+    $.validator.setDefaults({
+        highlight: function (element) {
+            $(element).closest('.form-group').addClass('has-error');
+        },
+        unhighlight: function (element) {
+            $(element).closest('.form-group').removeClass('has-error');
+        },
+        errorElement: 'span',
+        errorClass: 'help-block',
+        errorPlacement: function (error, element) {
+            if (element.parent('.input-group').length) {
+                error.insertAfter(element.parent());
+            } else {
+                error.insertAfter(element);
+            }
+        }
+    });
+
 
     $("#inputForm").validate({
         rules: {
@@ -143,9 +171,9 @@
           //if form input is invalid then exit
           if (!$("#inputForm").valid()) return;
 
-          var boxWidth = transformUnit(viewModel.width(), viewModel.unit());
-          var boxLength = transformUnit(viewModel.length(), viewModel.unit());
-          var boxHeight = transformUnit(viewModel.height(), viewModel.unit());
+          var boxWidth = transformUnitToCM(viewModel.width(), viewModel.unit());
+          var boxLength = transformUnitToCM(viewModel.length(), viewModel.unit());
+          var boxHeight = transformUnitToCM(viewModel.height(), viewModel.unit());
 
           var ball = getBall(viewModel.balls());
 
@@ -157,8 +185,9 @@
 
           var ballCount = Math.max(ballCount1, ballCount2, ballCount3, ballCount4);
 
-          var weight = ballCount * ball.weight / 1000;
-          var text = "You can fit " + ballCount + " balls into that space, with a total weight of " + weight + " kg.";
+          var weight = ballCount * ball.weight;
+          var weightText = beautifyWeight(weight, viewModel.unit());
+          var text = "You can fit " + ballCount + " balls into that space, with a total weight of " + weightText + ".";
           viewModel.calculatedOutput(text);
         }
     }
@@ -232,10 +261,11 @@
     }
 
     //transform into cm
-    function transformUnit(size, unit) {
+    function transformUnitToCM(size, unit) {
       switch (unit) {
-        case 'meters': return size * 100;
-        case 'yards': return size * 91.44;
+        case 'meter': return size * 100;
+        case 'yard': return size * 91.44;
+        case 'foot': return size * 30.48
         case 'inch': return size * 2.54;
       }
       //default is cm
@@ -249,6 +279,38 @@
         case 'basketball': return {diameter: 35.4, weight: 623.69 };
         case 'baseball': return { diameter: 7.45, weight: 145.5};
       }
+    }
+
+    function getIsMetric(unit) {
+      switch (unit) {
+        case 'meter': return true;
+        case 'cm': return true;
+        case 'yard': return false;
+        case 'foot': return false;
+        case 'inch': return false;
+      }
+    }
+
+    //weight in grams
+    function beautifyWeight(weight, isMetric) {
+      //TODO: I don't know how to convert for other systems without introducing confusion..
+      //if (isMetric) {
+        //tons
+        if (weight > 1000000) {
+          weight = parseInt(weight / 10000);
+          return (weight / 100) + " t"
+        } else if (weight > 1000) {
+          weight = parseInt(weight / 10);
+          return (weight / 100) + " kg"
+        } else if (weight > 100) {
+          return parseInt(weight) + " gr";
+        } else {
+          return weight + " gr";
+        }
+      /*} else {
+        //calculate the weight in drachms
+        var dr = parseInt(weight / 1.7718451953125);
+      }*/
     }
   </script>
   <script>
