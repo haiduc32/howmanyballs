@@ -237,7 +237,7 @@
         //if form input is invalid then exit
           if (!$("#volumeInputForm").valid()) return;
 
-          var cmVolume = transformUnitToCubicCM(viewModel.volume(), viewModel.unit());
+          var cmVolume = transformUnitToCubicCM(viewModel.volume(), viewModel.cubicUnit());
 
           //asume the given volume represents a cube
           //calculate the square root of 3
