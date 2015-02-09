@@ -300,15 +300,16 @@
       //ignore too small values
       if (spaceBBallsR < 0.0001) spaceBBallsR = 0;
       
+      //this is the standard distance between 2 rows
       var standardRowDist = ball.diameter / 2 * Math.sqrt(3);
       //calculate maximum number of rows
       var rowsCount = parseInt((boxLength - ball.diameter) / standardRowDist + 1);
       //calculate the remaining distributed space between rows
-      var spaceBBallsC = boxLength - ball.diameter - (rowsCount - 1) * standardRowDist;
+      var spaceBBallsC = (boxLength - ball.diameter - (rowsCount - 1) * standardRowDist) / (rowsCount - 1);
       //ignore too small values
       if (spaceBBallsC < 0.0001) spaceBBallsC = 0;
 
-      //calculate the vertical distance between ball centers from 2 adiacent rows
+      //calculate the distance between ball centers from 2 adiacent rows
       var rowCenterDist = Math.sqrt(Math.pow(standardRowDist + spaceBBallsC, 2) + Math.pow((ball.diameter + spaceBBallsR) / 2, 2));
       //calculate the distance from ball centers in layer one to layer two
       //first calculate the circumcenter in the first layer
@@ -321,7 +322,7 @@
 
       //now we just have to figure out the number of balls..
       var ballsInFirstLayer = firstRowCount * rowsCount - (parseInt(rowsCount / 2));
-      var ballsInOddLayers = (firstRowCount - 1) * (rowsCount - 1);
+      var ballsInOddLayers = (firstRowCount - 1) * (rowsCount-1) + (parseInt((rowsCount-1)/2));
       
       var oddLayers =parseInt(layerCount / 2);
       var fullLayers = layerCount - oddLayers;
