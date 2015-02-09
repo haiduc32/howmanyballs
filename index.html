@@ -321,7 +321,7 @@
 
       //now we just have to figure out the number of balls..
       var ballsInFirstLayer = firstRowCount * rowsCount - (parseInt(rowsCount / 2));
-      var ballsInOddLayers = (firstRowCount - 1) * rowsCount + (parseInt((rowsCount - 1) / 2));
+      var ballsInOddLayers = (firstRowCount - 1) * (rowsCount - 1);
       
       var oddLayers =parseInt(layerCount / 2);
       var fullLayers = layerCount - oddLayers;
